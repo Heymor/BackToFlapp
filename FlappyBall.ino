@@ -270,7 +270,9 @@ void loop() {
     // Collision checking
     for (byte x = 0; x < PIPE_ARRAY_SIZE; x++) { // For each pipe array element
       if (pipes[0][x] != 0) {                 // If the pipe is active (not 0)
-        if (checkPipe(x)) { gameState = 2; }  // If the check is true, game over
+        if (checkPipe(x) && !(arduboy.buttonsState() & (UP_BUTTON | DOWN_BUTTON)) != 0) { 
+                gameState = 2; 
+        }  // If the check is true, game over
       }
     }
 
