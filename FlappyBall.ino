@@ -81,6 +81,7 @@ namespace data {
   typedef struct {
     int pastBallY;
     int pastBallYPrev;
+    int pastBallYi; 
     char pastPipes[2][PIPE_ARRAY_SIZE];
   } record;
 } // namespace  data
@@ -193,17 +194,21 @@ void loop() {
       currRecord = records.shift();
       ballY = currRecord.pastBallY;
       ballYprev = currRecord.pastBallYPrev;
+      ballYi = currRecord.pastBallYi;
       
       for(int i = 0; i < 2; i++) {
         for(int j = 0; j < PIPE_ARRAY_SIZE; j++) {
           pipes[i][j] = currRecord.pastPipes[i][j];
         }
       }
+
+      ballV = 0;
     }
 
     if(frameCounter == 0) {
       currRecord.pastBallY = ballY;
       currRecord.pastBallYPrev = ballYprev;
+      currRecord.pastBallYi = ballYi;
 
       for(int i = 0; i < 2; i++) {
         for(int j = 0; j < PIPE_ARRAY_SIZE; j++) {
