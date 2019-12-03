@@ -81,7 +81,6 @@ namespace data {
   typedef struct {
     int pastBallY;
     int pastBallYPrev;
-    int pastBallYi; 
     char pastPipes[2][PIPE_ARRAY_SIZE];
   } record;
 } // namespace  data
@@ -158,7 +157,7 @@ void setup() {
 void loop() {
   if (!arduboy.nextFrame())
     return;
-  frameCounter = (++frameCounter) % 5;
+  frameCounter = (++frameCounter) % 4;
 
   if (arduboy.pressed(LEFT_BUTTON)) { // If the button for sound toggle is pressed
     if (arduboy.audio.enabled()) {    // If sound is enabled
@@ -194,7 +193,7 @@ void loop() {
       currRecord = records.shift();
       ballY = currRecord.pastBallY;
       ballYprev = currRecord.pastBallYPrev;
-      ballYi = currRecord.pastBallYi;
+      ballYi = currRecord.pastBallY;
       
       for(int i = 0; i < 2; i++) {
         for(int j = 0; j < PIPE_ARRAY_SIZE; j++) {
@@ -202,13 +201,14 @@ void loop() {
         }
       }
 
+      arduboy.setCursor(18,55);
+      arduboy.print(records.size(), DEC);
       ballV = 0;
     }
 
     if(frameCounter == 0) {
       currRecord.pastBallY = ballY;
       currRecord.pastBallYPrev = ballYprev;
-      currRecord.pastBallYi = ballYi;
 
       for(int i = 0; i < 2; i++) {
         for(int j = 0; j < PIPE_ARRAY_SIZE; j++) {
