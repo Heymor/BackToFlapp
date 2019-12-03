@@ -329,6 +329,7 @@ void loop() {
     ballY = BALL_Y_START;   // Reset to initial ball height
     pipeGap = PIPE_GAP_MAX; // Reset the pipe gap height
     pipeReduceCount = PIPE_GAP_REDUCE; // Init the pipe gap reduction counter
+    records.clear();
   }
 
   arduboy.display();  // Finally draw this thang
