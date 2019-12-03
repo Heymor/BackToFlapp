@@ -40,11 +40,6 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "bitmaps.h"
 #include <CircularBuffer.h>
 
-Arduboy2 arduboy;
-ArduboyTones sound(arduboy.audio.enabled);
-CircularBuffer<int, 70> pastY;
-CircularBuffer<char*, 70> pastPipe;
-
 // Things that make the game work the way it does
 #define FRAMES_PER_SECOND 30   // The update and refresh speed
 #define FRAC_BITS 6            // The number of bits in the fraction part of a fixed point int
@@ -80,6 +75,20 @@ CircularBuffer<char*, 70> pastPipe;
 #define BALL_Y_START ((HEIGHT / 2) - 1) // The height Floaty begins at
 #define BALL_X 32              // Floaty's X Axis
 
+
+// New vars 
+namespace data {
+  typedef struct {
+    int pastBallY;
+    int pastBallYPrev;
+    char pastPipes[2][PIPE_ARRAY_SIZE];
+  } record;
+} // namespace  data
+
+Arduboy2 arduboy;
+ArduboyTones sound(arduboy.audio.enabled);
+CircularBuffer<data::record, 70> records;
+
 // Storage Vars
 byte gameState = 0;
 unsigned int gameScore = 0;
@@ -96,6 +105,8 @@ char ballFlapper = BALL_RADIUS; // Floaty's wing length
 char gameScoreX = 0;
 char gameScoreY = 0;
 byte gameScoreRiser = 0;
+int  frameCounter = 0;
+data::record currRecord;
 
 // Sounds
 const uint16_t intro[] PROGMEM = {
@@ -146,6 +157,7 @@ void setup() {
 void loop() {
   if (!arduboy.nextFrame())
     return;
+  frameCounter = (++frameCounter) % 5;
 
   if (arduboy.pressed(LEFT_BUTTON)) { // If the button for sound toggle is pressed
     if (arduboy.audio.enabled()) {    // If sound is enabled
@@ -175,6 +187,32 @@ void loop() {
 
   // ===== State: Playing =====
   if (gameState == 1) {     // If the game is playing
+    int counter = 0;
+
+    if((arduboy.buttonsState() & (UP_BUTTON | DOWN_BUTTON)) != 0){
+      currRecord = records.shift();
+      ballY = currRecord.pastBallY;
+      ballYprev = currRecord.pastBallYPrev;
+      
+      for(int i = 0; i < 2; i++) {
+        for(int j = 0; j < PIPE_ARRAY_SIZE; j++) {
+          pipes[i][j] = currRecord.pastPipes[i][j];
+        }
+      }
+    }
+
+    if(frameCounter == 0) {
+      currRecord.pastBallY = ballY;
+      currRecord.pastBallYPrev = ballYprev;
+
+      for(int i = 0; i < 2; i++) {
+        for(int j = 0; j < PIPE_ARRAY_SIZE; j++) {
+          currRecord.pastPipes[i][j] = pipes[i][j];
+        }
+      }
+      records.unshift(currRecord);
+    }
+
     // If the ball isn't already rising, check for jump
     if ((ballYprev <= ballY) && jumpPressed()) {
       beginJump();          // Jump
@@ -389,7 +427,7 @@ boolean checkPipe(byte x) {  // Collision detection, x is pipe to check
 }
 
 boolean jumpPressed() { // Return "true" if a jump button is pressed
-  return (arduboy.buttonsState() & (UP_BUTTON | DOWN_BUTTON | A_BUTTON | B_BUTTON)) != 0;
+  return (arduboy.buttonsState() & (A_BUTTON | B_BUTTON)) != 0;
 }
 
 void beginJump() {
