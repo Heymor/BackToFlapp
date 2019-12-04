@@ -2,6 +2,7 @@
   FlappyBall (aka FloatyBall) for the Arduboy
   Written by Chris Martinez, 3/5/2014
   Modified by Scott Allen, April 2016
+  Modified by Mor S. and Matthew S., December 2019
 */
 
 /*
@@ -35,6 +36,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------
 */
 
+#include <Arduino.h>
 #include <Arduboy2.h>
 #include <ArduboyTones.h>
 #include "bitmaps.h"
@@ -189,7 +191,7 @@ void loop() {
   if (gameState == 1) {     // If the game is playing
     int counter = 0;
 
-    if((arduboy.buttonsState() & (UP_BUTTON | DOWN_BUTTON)) != 0){
+    if(((arduboy.buttonsState() & (UP_BUTTON | DOWN_BUTTON)) != 0) && !records.isEmpty()){
       currRecord = records.shift();
       ballY = currRecord.pastBallY;
       ballYprev = currRecord.pastBallYPrev;
