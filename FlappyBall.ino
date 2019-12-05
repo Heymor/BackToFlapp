@@ -109,6 +109,7 @@ char gameScoreY = 0;
 byte gameScoreRiser = 0;
 int  frameCounter = 0;
 data::record currRecord;
+boolean isPaused;
 
 // Sounds
 const uint16_t intro[] PROGMEM = {
@@ -174,6 +175,15 @@ void loop() {
 
   arduboy.clear();
 
+  if(((arduboy.buttonsState() & (RIGHT_BUTTON)) != 0)) {
+    debounceButtons();
+    if(!isPaused) {
+      isPaused = true;
+    } else {
+      isPaused = false; 
+    }
+  }
+
   // ===== State: Wait to begin =====
   if (gameState == 0) {     // If waiting to begin
     drawFloor();
@@ -208,16 +218,18 @@ void loop() {
       ballV = 0;
     }
 
-    if(frameCounter == 0) {
-      currRecord.pastBallY = ballY;
-      currRecord.pastBallYPrev = ballYprev;
+    if(!isPaused) {
+      if(frameCounter == 0) {
+        currRecord.pastBallY = ballY;
+        currRecord.pastBallYPrev = ballYprev;
 
-      for(int i = 0; i < 2; i++) {
-        for(int j = 0; j < PIPE_ARRAY_SIZE; j++) {
-          currRecord.pastPipes[i][j] = pipes[i][j];
+        for(int i = 0; i < 2; i++) {
+          for(int j = 0; j < PIPE_ARRAY_SIZE; j++) {
+            currRecord.pastPipes[i][j] = pipes[i][j];
+          }
         }
+        records.unshift(currRecord);
       }
-      records.unshift(currRecord);
     }
 
     // If the ball isn't already rising, check for jump
@@ -225,30 +237,34 @@ void loop() {
       beginJump();          // Jump
     }
 
-    moveFloaty();
+    if(!isPaused) 
+      moveFloaty();
 
     if (ballY < BALL_RADIUS) {  // If Floaty has moved above the top of the screen
       ballY = BALL_RADIUS;      // Set position to top
       startFalling();           // Start falling
     }
 
-    if (arduboy.everyXFrames(PIPE_GEN_FRAMES)) { // Every PIPE_GEN_FRAMES worth of frames
-      generatePipe();                  // Generate a pipe
+    if(!isPaused) {
+      if (arduboy.everyXFrames(PIPE_GEN_FRAMES)) { // Every PIPE_GEN_FRAMES worth of frames
+        generatePipe();                  // Generate a pipe
+      }
     }
-
-    for (byte x = 0; x < PIPE_ARRAY_SIZE; x++) {  // For each pipe array element
-      if (pipes[0][x] != 0) {           // If the pipe is active
-        pipes[0][x] = pipes[0][x] - PIPE_MOVE_DISTANCE;  // Then move it left
-        if (pipes[0][x] + PIPE_WIDTH < 0) {  // If the pipe's right edge is off screen
-          pipes[0][x] = 0;              // Then set it inactive
-        }
-        if (pipes[0][x] + PIPE_WIDTH == (BALL_X - BALL_RADIUS)) {  // If the pipe passed Floaty
-          gameScore++;                  // Increment the score
-          pipeReduceCount--;            // Decrement the gap reduction counter
-          gameScoreX = BALL_X;                  // Load up the floating text with
-          gameScoreY = ballY - BALL_RADIUS - 8; //  current ball x/y values
-          gameScoreRiser = 15;          // And set it for 15 frames
-          sound.tones(point);
+    if(!isPaused) {
+      for (byte x = 0; x < PIPE_ARRAY_SIZE; x++) {  // For each pipe array element
+        if (pipes[0][x] != 0) {           // If the pipe is active
+          pipes[0][x] = pipes[0][x] - PIPE_MOVE_DISTANCE;  // Then move it left
+          if (pipes[0][x] + PIPE_WIDTH < 0) {  // If the pipe's right edge is off screen
+            pipes[0][x] = 0;              // Then set it inactive
+          }
+          if (pipes[0][x] + PIPE_WIDTH == (BALL_X - BALL_RADIUS)) {  // If the pipe passed Floaty
+            gameScore++;                  // Increment the score
+            pipeReduceCount--;            // Decrement the gap reduction counter
+            gameScoreX = BALL_X;                  // Load up the floating text with
+            gameScoreY = ballY - BALL_RADIUS - 8; //  current ball x/y values
+            gameScoreRiser = 15;          // And set it for 15 frames
+            sound.tones(point);
+          }
         }
       }
     }
